@@ -1,0 +1,1 @@
+mongo -> docker run --name="mongo-load-balancer" -d -p 27017:27017 -e MONGODB_USER="user" -e MONGODB_DATABASE="mydatabase" -e MONGODB_PASS="mypass" tutum/mongodb
