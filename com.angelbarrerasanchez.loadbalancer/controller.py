@@ -36,6 +36,7 @@ def register_or_delete_user():
 
 
 @app.route('/api/<string:appid>', methods=['POST', 'DELETE'])
+#@jwt_required
 def registerOrDeleteApplication(appid):
     if request.method == 'POST':
         if validator.is_machine_json_valid(request.json):
