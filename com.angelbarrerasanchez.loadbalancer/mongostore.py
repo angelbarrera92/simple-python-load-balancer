@@ -35,8 +35,9 @@ def removeServer(appname, host, port, username):
     app = mongocollection.find_one({'id': appname, 'username': username})
     if app:
         for server in app['servers']:
-            if server.host == host and server.port == port:
+            if server['host'] == host and server['port'] == port:
                 app['servers'].remove(server)
+        mongocollection.save(app)
     else:
         raise Exception('TODO CAMBIAR, SERVER NO ENCONTRADO')
 

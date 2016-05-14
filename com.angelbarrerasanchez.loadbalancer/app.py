@@ -14,4 +14,4 @@ scheduler.init_app(flaskapp)
 #scheduler.add_job('job1', statuscheck.tick, trigger='interval', seconds=3)
 scheduler.start()
 
-flaskapp.run(debug=False, host='0.0.0.0')
+flaskapp.run(debug=True, host='0.0.0.0')
