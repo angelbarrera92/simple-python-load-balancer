@@ -2,7 +2,7 @@ from redis import Redis
 import random
 
 
-redis_db = Redis(host='localhost', port=6379, password='u5oNnAO9ELaYRAYTlDSeKc6U1yp3zHqm')
+redis_db = Redis(host='localhost', port=6379, password='mypass')
 
 
 def register_endpoint(appname, host, port=80):
@@ -31,3 +31,10 @@ def get_random_machine_for_app(appname):
         return random.sample(machines, 1)
     else:
         return None
+
+
+def appExists(appname):
+    if get_machines_for_app(appname):
+        return True
+    else:
+        return False

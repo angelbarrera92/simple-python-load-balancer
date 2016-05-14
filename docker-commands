@@ -1,1 +1,3 @@
 mongo -> docker run --name="mongo-load-balancer" -d -p 27017:27017 -e MONGODB_USER="user" -e MONGODB_DATABASE="mydatabase" -e MONGODB_PASS="mypass" tutum/mongodb
+
+redis -> docker run --name="redis-load-balancer" -d -p 6379:6379 -e REDIS_PASS="mypass" tutum/redis
