@@ -6,10 +6,10 @@ import appdao, userdao, appserversdao
 # Method that purges the non functional servers of an application
 def app_servers_status_checker():
     print 'init the cron task'
-    appsnames = appdao.getapps()
+    appsnames = appdao.get_apps()
     for appname in appsnames:
         print 'app to check %s' % appname
-        servers = appdao.getServers(appname)
+        servers = appdao.get_servers(appname)
         for server in servers:
             host = server['host']
             port = server['port']

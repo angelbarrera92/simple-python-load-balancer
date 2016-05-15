@@ -12,31 +12,32 @@ mongo = MongoClient(mongouri)
 mongodb = mongo[mongodbname]
 mongocollection = mongodb[mongocollectionname]
 
-def getServers(appname):
-    app = mongocollection.find_one({'id': appname})
+
+def get_servers(app_name):
+    app = mongocollection.find_one({'id': app_name})
     if app:
         return app['servers']
     else:
         raise Exception('TODO CAMBIAR, SERVER NO ENCONTRADO')
 
 
-def add_app_server(appname, host, port, username, infouri=None):
+def add_app_server(app_name, host, port, username, infouri=None):
     print infouri
-    app = mongocollection.find_one({'id': appname, 'username': username})
+    app = mongocollection.find_one({'id': app_name, 'username': username})
     if app:
         app['servers'].append({'host': host, 'port': port, 'infouri' : infouri})
         mongocollection.save(app)
     else:
-        app = {'id': appname, 'username': username, 'servers' : [{'host': host, 'port': port, 'infouri' : infouri}]}
+        app = {'id': app_name, 'username': username, 'servers' : [{'host': host, 'port': port, 'infouri' : infouri}]}
         mongocollection.insert_one(app)
         #raise Exception('TODO CAMBIAR, SERVER NO ENCONTRADO')
 
 
-def remove_server(appname, host, port, username=None):
+def remove_server(app_name, host, port, username=None):
     if username:
-        app = mongocollection.find_one({'id': appname, 'username': username})
+        app = mongocollection.find_one({'id': app_name, 'username': username})
     else:
-        app = mongocollection.find_one({'id': appname})
+        app = mongocollection.find_one({'id': app_name})
     if app:
         for server in app['servers']:
             if server['host'] == host and server['port'] == port:
@@ -48,28 +49,28 @@ def remove_server(appname, host, port, username=None):
 
 def get_user_apps(username):
     cursor = mongocollection.find({'username': username})
-    listapps = list()
+    app_list = list()
     for app in cursor:
-        listapps.append(app['id'])
+        app_list.append(app['id'])
     cursor.close()
-    return listapps
+    return app_list
 
 
-def getapps():
+def get_apps():
     cursor = mongocollection.find()
-    listapps = list()
+    app_list = list()
     for app in cursor:
-        listapps.append(app['id'])
+        app_list.append(app['id'])
     cursor.close()
-    return listapps
+    return app_list
 
 
-def remove_app(appname, username):
-    mongocollection.remove({'id': appname, 'username': username}, False)
+def remove_app(app_name, username):
+    mongocollection.remove({'id': app_name, 'username': username}, False)
 
 
-def is_app_of_user(appname, username):
-    app = mongocollection.find_one({'id': appname})
+def is_app_of_user(app_name, username):
+    app = mongocollection.find_one({'id': app_name})
     if app and app['username'] == username:
         return True
     else:

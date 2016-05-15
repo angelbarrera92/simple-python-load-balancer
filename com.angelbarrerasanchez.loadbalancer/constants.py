@@ -12,4 +12,4 @@ JOB_INTERVAL_SECONDS = int(os.getenv('JOB_INTERVAL_SECONDS', '60'))
 
 REDIS_HOST = str(os.getenv('REDIS_HOST', 'localhost'))
 REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
-REDIS_PASSSWORD = str(os.getenv('REDIS_PASSSWORD', 'mypass'))
+REDIS_PASSWORD = str(os.getenv('REDIS_PASSSWORD', 'mypass'))

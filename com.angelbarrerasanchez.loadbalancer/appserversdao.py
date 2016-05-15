@@ -3,7 +3,7 @@ import constants
 import random
 
 # Redis Connection
-redis_db = Redis(host=constants.REDIS_HOST, port=constants.REDIS_PORT, password=constants.REDIS_PASSSWORD)
+redis_db = Redis(host=constants.REDIS_HOST, port=constants.REDIS_PORT, password=constants.REDIS_PASSWORD)
 
 
 # Register an endpoint to an application
