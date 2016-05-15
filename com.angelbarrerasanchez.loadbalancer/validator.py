@@ -15,8 +15,9 @@ app_machine_schema = {
     "properties": {
         "host": {"type": "string"},
         "port": {"type": "number", "minimum": 0, "maximum": 65535},
+        "statuspath" : {"type": "string"}
     },
-    "required": ["host", "port"]
+    "required": ["host", "port", "statuspath"]
 }
 
 

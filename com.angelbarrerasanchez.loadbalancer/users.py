@@ -23,7 +23,6 @@ class User(object):
         self.id = email
         self.email = email
         self.password = password
-        self.apps = list()
 
     def __str__(self):
         return "User(email='%s')" % (self.email)
@@ -33,13 +32,11 @@ class User(object):
         user_dict['id'] = self.id
         user_dict['email'] = self.email
         user_dict['password'] = self.password
-        user_dict['apps'] = self.apps
         return user_dict
 
     @staticmethod
     def from_dict(user_dict):
         user = User(email=user_dict['email'], password=user_dict['password'])
-        user.apps = user_dict['apps']
         user.id = user_dict['id']
         return user
 
@@ -53,13 +50,6 @@ class User(object):
     def check_password(hashed_password, user_password):
         password, salt = hashed_password.split(':')
         return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
-
-    def add_app_to_user(self, appname):
-        self.apps.append(appname)
-
-    def remove_app_to_user(self, appname):
-        self.apps.remove(appname)
-        redistore.delete_app(appname)
 
 
 def register_user(user_json):
@@ -76,9 +66,6 @@ def remove_user(user_json):
     if cursor.count() == 1:
         user = cursor.next()
         if user['email'] == user_json['email'] and User.check_password(user['password'], user_json['password']):
-            for app in user['apps']:
-                redistore.delete_app(app)
-
             mongocollection.remove(user)
             cursor.close()
             return True

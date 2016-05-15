@@ -21,6 +21,7 @@ def getServers(appname):
 
 
 def addServer(appname, host, port, username, infouri=None):
+    print infouri
     app = mongocollection.find_one({'id': appname, 'username': username})
     if app:
         app['servers'].append({'host': host, 'port': port, 'infouri' : infouri})
@@ -31,8 +32,11 @@ def addServer(appname, host, port, username, infouri=None):
         #raise Exception('TODO CAMBIAR, SERVER NO ENCONTRADO')
 
 
-def removeServer(appname, host, port, username):
-    app = mongocollection.find_one({'id': appname, 'username': username})
+def removeServer(appname, host, port, username=None):
+    if username:
+        app = mongocollection.find_one({'id': appname, 'username': username})
+    else:
+        app = mongocollection.find_one({'id': appname})
     if app:
         for server in app['servers']:
             if server['host'] == host and server['port'] == port:
@@ -40,6 +44,24 @@ def removeServer(appname, host, port, username):
         mongocollection.save(app)
     else:
         raise Exception('TODO CAMBIAR, SERVER NO ENCONTRADO')
+
+
+def getuserapps(username):
+    cursor = mongocollection.find({'username': username})
+    listapps = list()
+    for app in cursor:
+        listapps.append(app['id'])
+    cursor.close()
+    return listapps
+
+
+def getapps():
+    cursor = mongocollection.find()
+    listapps = list()
+    for app in cursor:
+        listapps.append(app['id'])
+    cursor.close()
+    return listapps
 
 
 def removeApp(appname, username):

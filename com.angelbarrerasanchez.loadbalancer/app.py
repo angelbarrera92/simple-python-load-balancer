@@ -11,7 +11,7 @@ jwt = JWT(flaskapp, users.authenticate, users.identity)
 
 scheduler = APScheduler()
 scheduler.init_app(flaskapp)
-#scheduler.add_job('job1', statuscheck.tick, trigger='interval', seconds=3)
+#scheduler.add_job('job1', statuscheck.statuschecker, trigger='interval', seconds=30)
 scheduler.start()
 
-flaskapp.run(debug=True, host='0.0.0.0')
+flaskapp.run(debug=False, host='0.0.0.0')

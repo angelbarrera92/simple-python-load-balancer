@@ -7,16 +7,16 @@ import redistore, mongostore
 import validator
 import users
 from app_exceptions.validationexception import validationexceptions
+import statuscheck
 
 app = Flask('load_balancer_app')
 app.url_map.add(Rule('/api/<string:appid>/<path:path>', endpoint='balancer')) #Did to allow all verbs/methods on the load balancer method :)
 
 
-@app.route('/protected/<string:id>')
-@jwt_required()
-def protected(id):
-    return 'Hola %s you are %s' % (id,current_identity)
-
+# REMOVE WHEN SCHEDULER IS FULL DEVELOPED
+@app.route('/status')
+def checkstatus():
+    statuscheck.statuschecker()
 
 @app.endpoint('balancer')
 def loadBalance(appid, path):
@@ -41,6 +41,11 @@ def userroute():
     elif request.method == 'DELETE':
         if validator.is_user_json_valid(request.json) and users.user_exists(request.json['email']):
             users.remove_user(request.json)
+            apps = mongostore.getuserapps(request.json['email'])
+            for app in apps:
+                print 'deleting app %s' % app
+                mongostore.removeApp(app,request.json['email'])
+                redistore.delete_app(app)
             return 'TODO OK'
         else:
             raise validationexceptions("01", "bad payload posted")
@@ -52,7 +57,7 @@ def userroute():
 def approute(appid):
     if request.method == 'POST':
         if validator.is_machine_json_valid(request.json) and not redistore.appExists(appid):
-            mongostore.addServer(appid, request.json['host'], request.json['port'], str(current_identity))
+            mongostore.addServer(appid, request.json['host'], request.json['port'], str(current_identity), request.json['statuspath'])
             redistore.register_endpoint(appid, request.json['host'], request.json['port'])
         action = 'register'
     elif request.method == 'DELETE':
@@ -70,11 +75,11 @@ def nodeapproute(appid):
         if not redistore.appExists(appid) and validator.is_machine_json_valid(request.json):
             # REGISTER AN APP
             print 'registering a new app'
-            mongostore.addServer(appid, request.json['host'], request.json['port'], str(current_identity))
+            mongostore.addServer(appid, request.json['host'], request.json['port'], str(current_identity), request.json['statuspath'])
             redistore.register_endpoint(appid, request.json['host'], request.json['port'])
         elif mongostore.isAppOfUser(appid, str(current_identity)) and validator.is_machine_json_valid(request.json):
             print 'registering a new server for app %s' % appid
-            mongostore.addServer(appid, request.json['host'], request.json['port'], str(current_identity))
+            mongostore.addServer(appid, request.json['host'], request.json['port'], str(current_identity), request.json['statuspath'])
             redistore.register_endpoint(appid, request.json['host'], request.json['port'])
     elif request.method == 'DELETE':
         if mongostore.isAppOfUser(appid, str(current_identity)):
