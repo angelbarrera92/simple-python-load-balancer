@@ -1,6 +1,6 @@
 import hashlib
 import uuid
-import redistore
+import appserversdao
 from pymongo import MongoClient
 
 mongouser = "user"
@@ -52,20 +52,20 @@ class User(object):
         return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
 
 
-def register_user(user_json):
-    if not user_exists(user_json['email']):
-        user = User(user_json['email'], User.hash_password(user_json['password']))
+def register_user(email, password):
+    if not user_exists(email):
+        user = User(email, User.hash_password(password))
         mongocollection.insert_one(user.to_dict())
         return True
     else:
         return False
 
 
-def remove_user(user_json):
-    cursor = mongocollection.find({"email": user_json['email']})
+def remove_user(email, password):
+    cursor = mongocollection.find({"email": email})
     if cursor.count() == 1:
         user = cursor.next()
-        if user['email'] == user_json['email'] and User.check_password(user['password'], user_json['password']):
+        if user['email'] == email and User.check_password(user['password'], password):
             mongocollection.remove(user)
             cursor.close()
             return True

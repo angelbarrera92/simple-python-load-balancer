@@ -1,17 +1,18 @@
 from controller import app as flaskapp
 from flask_jwt import JWT
-import users, statuscheck
+import userdao, appservice, constants
 from flask_apscheduler import APScheduler
 
-# TODO CHANGE SECRET KEY
-flaskapp.config['SECRET_KEY'] = 'super-secret'
-flaskapp.config['JWT_AUTH_USERNAME_KEY'] = 'email'
 
-jwt = JWT(flaskapp, users.authenticate, users.identity)
+flaskapp.config['SECRET_KEY'] = constants.JWT_SECRET
+flaskapp.config['JWT_AUTH_USERNAME_KEY'] = constants.JWT_AUTH_USERNAME_KEY
+
+jwt = JWT(flaskapp, userdao.authenticate, userdao.identity)
 
 scheduler = APScheduler()
 scheduler.init_app(flaskapp)
-#scheduler.add_job('job1', statuscheck.statuschecker, trigger='interval', seconds=30)
+scheduler.add_job(constants.JOB_ID, appservice.app_servers_status_checker, trigger='interval',
+                  seconds=constants.JOB_INTERVAL_SECONDS)
 scheduler.start()
 
-flaskapp.run(debug=False, host='0.0.0.0')
+flaskapp.run(debug=constants.APP_DEBUG, host=constants.APP_HOST, port=constants.APP_PORT)
