@@ -1,19 +1,12 @@
 import hashlib
 import uuid
 import appserversdao
+import constants
 from pymongo import MongoClient
 
-mongouser = "user"
-mongopass = "mypass"
-mongohost = "localhost"
-mongoport = "27017"
-mongodbname = "mydatabase"
-mongocollectionname = "users"
-mongouri = "mongodb://%s:%s@%s:%s/%s" % (mongouser, mongopass, mongohost, mongoport, mongodbname)
-
-mongo = MongoClient(mongouri)
-mongodb = mongo[mongodbname]
-mongocollection = mongodb[mongocollectionname]
+mongo = MongoClient(constants.MONGO_URI)
+mongodb = mongo[constants.MONGO_DATABASE]
+mongocollection = mongodb[constants.MONGO_USERS_COLLECTION]
 
 users = list()
 

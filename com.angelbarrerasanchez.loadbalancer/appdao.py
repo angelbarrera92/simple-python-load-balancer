@@ -1,16 +1,9 @@
 from pymongo import MongoClient
+import constants
 
-mongouser = "user"
-mongopass = "mypass"
-mongohost = "localhost"
-mongoport = "27017"
-mongodbname = "mydatabase"
-mongocollectionname = "serverstatus"
-mongouri = "mongodb://%s:%s@%s:%s/%s" % (mongouser, mongopass, mongohost, mongoport, mongodbname)
-
-mongo = MongoClient(mongouri)
-mongodb = mongo[mongodbname]
-mongocollection = mongodb[mongocollectionname]
+mongo = MongoClient(constants.MONGO_URI)
+mongodb = mongo[constants.MONGO_DATABASE]
+mongocollection = mongodb[constants.MONGO_APPS_COLLECTION]
 
 
 def get_servers(app_name):

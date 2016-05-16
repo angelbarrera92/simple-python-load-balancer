@@ -1,4 +1,4 @@
-from flask import request, Response
+from flask import request, Response, json
 import httplib
 import appdao, userdao, appserversdao
 
@@ -38,9 +38,10 @@ def balance_request(appid, path):
     headers.pop("Content-Length", None)
     h1.request(method=request.method, url="/%s" % path, headers=headers)
     r = h1.getresponse()
-    data = r.read()
     res = Response()
-    #TODO MAKE A VALID RESPONSE
+    res.headers = r.getheaders()
+    res.data = r.read()
+    res.status_code = r.status
     return res
 
 
@@ -56,11 +57,24 @@ def app_exists(app_name):
 # Register a new user
 def register_user(email, password):
     if userdao.register_user(email, password):
-        # TODO MAKE A GOOD RESPONSE
-        return None
+        res = Response()
+        res.status_code = httplib.CREATED
+        res.mimetype = "application/json"
+        f = dict()
+        f['description'] = email
+        f['status_code'] = httplib.CREATED
+        res.data = json.dumps(f)
+        return res
     else:
-        # TODO MAKE A BAD RESPONSE
-        return None
+        res = Response()
+        res.status_code = httplib.CONFLICT
+        res.mimetype = "application/json"
+        f = dict()
+        f['description'] = 'A error occurred when trying to register with email %s ' % email
+        f['error'] = '03'
+        f['status_code'] = httplib.CONFLICT
+        res.data = json.dumps(f)
+        return res
 
 
 # Remove a user

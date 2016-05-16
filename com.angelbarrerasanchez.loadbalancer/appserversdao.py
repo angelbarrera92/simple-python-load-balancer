@@ -23,7 +23,7 @@ def remove_app(app_name):
 
 # Return a set of machines (host:port) if the app exists,
 # otherwise it returns None
-def get_machines_of_app(app_name):
+def get_endpoints_of_app(app_name):
     machines = redis_db.smembers(app_name)
     if len(machines) > 0:
         return machines
@@ -35,7 +35,7 @@ def get_machines_of_app(app_name):
 # it will return one endpoint,
 # otherwise it returns None
 def get_random_endpoint_of_app(app_name):
-    machines = get_machines_of_app(app_name)
+    machines = get_endpoints_of_app(app_name)
     if machines:
         return random.sample(machines, 1)
     else:
@@ -44,7 +44,7 @@ def get_random_endpoint_of_app(app_name):
 
 # Check if the app exists looking for servers
 def app_exists(app_name):
-    if get_machines_of_app(app_name):
+    if get_endpoints_of_app(app_name):
         return True
     else:
         return False

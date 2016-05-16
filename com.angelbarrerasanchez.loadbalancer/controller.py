@@ -1,14 +1,13 @@
+from validationexception import ValidationException
 from flask import Flask, request, jsonify
-from werkzeug.routing import Rule
 from flask_jwt import jwt_required, current_identity
+from werkzeug.routing import Rule
 
-from exceptions.validationexception import validationexceptions
 import appservice
 import validator
 
-
 app = Flask('load_balancer_app')
-app.url_map.add(Rule('/api/<string:appid>/<path:path>', endpoint='balancer')) #Did to allow all verbs/methods on the load balancer method :)
+app.url_map.add(Rule('/api/<string:app_name>/<path:path>', endpoint='balancer')) #Did to allow all verbs/methods on the load balancer method :)
 
 
 # REMOVE WHEN SCHEDULER IS FULL DEVELOPED
@@ -19,62 +18,65 @@ def check_status_route():
 
 
 @app.endpoint('balancer')
-def load_balance_route(appid, path):
-    return appservice.balancerequest(appid, path)
+def load_balance_route(app_name, path):
+    return appservice.balancerequest(app_name, path)
 
 
 @app.route('/api/users', methods=['POST', 'DELETE'])
 def user_route():
-    if request.method == 'POST':
-        if validator.is_user_json_valid(request.json) and not appservice.user_exists(request.json['email']):
-            return appservice.register_user(request.json['email'], request.json['password'])
-        else:
-            raise validationexceptions("01", "bad payload posted")
-    elif request.method == 'DELETE':
-        if validator.is_user_json_valid(request.json) and appservice.user_exists(request.json['email']):
-            return appservice.remove_user(request.json['email'], request.json['password'])
-        else:
-            raise validationexceptions("01", "bad payload posted")
+    if validator.is_user_json_valid(request.json):
+        if request.method == 'POST':
+                if not appservice.user_exists(request.json['email']):
+                    return appservice.register_user(request.json['email'], request.json['password'])
+                else:
+                    raise ValidationException('02', 'There is already an user registered with that email', 409)
+        elif request.method == 'DELETE':
+            if appservice.user_exists(request.json['email']):
+                return appservice.remove_user(request.json['email'], request.json['password'])
+            else:
+                raise ValidationException('02', 'There is not an user registered with that email', 409)
+    else:
+        raise ValidationException('01', 'Bad payload posted. Check the payload before send it again', 409)
 
 
-@app.route('/api/apps/<string:appid>', methods=['POST', 'DELETE'])
+@app.route('/api/apps/<string:app_name>', methods=['POST', 'DELETE'])
 @jwt_required()
-def app_route(appid):
+def app_route(app_name):
     if request.method == 'POST':
-        if validator.is_machine_json_valid(request.json) and not appservice.app_exists(appid):
-            return appservice.register_app(str(current_identity), appid, request.json['host'], request.json['port'],
+        if validator.is_machine_json_valid(request.json) and not appservice.app_exists(app_name):
+            return appservice.register_app(str(current_identity), app_name, request.json['host'], request.json['port'],
                                            request.json['statuspath'])
         else:
-            raise validationexceptions("01", "bad payload posted")
+            raise ValidationException('01', 'bad payload posted')
     elif request.method == 'DELETE':
-        if appservice.app_exists(appid):
-            return appservice.remove_app(str(current_identity), appid)
+        if appservice.app_exists(app_name):
+            return appservice.remove_app(str(current_identity), app_name)
         else:
-            raise validationexceptions("01", "bad payload posted")
+            raise ValidationException('01', 'bad payload posted')
 
 
-@app.route('/api/nodes/<string:appid>', methods=['POST', 'DELETE'])
+@app.route('/api/nodes/<string:app_name>', methods=['POST', 'DELETE'])
 @jwt_required()
-def node_app_route(appid):
+def node_app_route(app_name):
     if request.method == 'POST':
         if validator.is_machine_json_valid(request.json):
-            if not appservice.app_exists(appid):
-                return appservice.register_app(str(current_identity), appid, request.json['host'], request.json['port'],
+            if not appservice.app_exists(app_name):
+                return appservice.register_app(str(current_identity), app_name, request.json['host'], request.json['port'],
                                                request.json['statuspath'])
             else:
-                return appservice.register_server_app(str(current_identity), appid, request.json['host'],
+                return appservice.register_server_app(str(current_identity), app_name, request.json['host'],
                                                       request.json['port'], request.json['statuspath'])
         else:
-            raise validationexceptions("01", "bad payload posted")
+            raise ValidationException('01', 'bad payload posted')
     elif request.method == 'DELETE':
-        if validator.is_machine_json_valid(request.json) and appservice.app_exists(appid):
-            return appservice.remove_server_app(str(current_identity), appid, request.json['host'], request.json['port'])
+        if validator.is_machine_json_valid(request.json) and appservice.app_exists(app_name):
+            return appservice.remove_server_app(str(current_identity), app_name, request.json['host'], request.json['port'])
         else:
-            raise validationexceptions("01", "bad payload posted")
+            raise ValidationException('01', 'bad payload posted')
 
 
 #ERRORS
-@app.errorhandler(validationexceptions)
+@app.errorhandler(ValidationException)
 def handle_invalid_register(error):
     response = jsonify(error.to_dict())
     response.status_code = error.statuscode

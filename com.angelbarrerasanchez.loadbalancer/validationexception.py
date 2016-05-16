@@ -1,4 +1,7 @@
-class validationexceptions(Exception):
+from exceptions import Exception
+
+
+class ValidationException(Exception):
     def __init__(self, errorcode, message, statuscode=400):
         self.statuscode = statuscode
         self.message = message
