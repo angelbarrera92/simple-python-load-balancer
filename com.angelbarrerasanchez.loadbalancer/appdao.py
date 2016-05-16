@@ -58,8 +58,11 @@ def get_apps():
     return app_list
 
 
-def remove_app(app_name, username):
-    mongocollection.remove({'id': app_name, 'username': username}, False)
+def remove_app(app_name, username=None):
+    if username:
+        mongocollection.remove({'id': app_name, 'username': username}, False)
+    else:
+        mongocollection.remove({'id': app_name}, False)
 
 
 def is_app_of_user(app_name, username):

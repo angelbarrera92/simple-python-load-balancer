@@ -1,13 +1,14 @@
 from flask import request, Response, json
 import httplib
-import appdao, userdao, appserversdao
+import appdao
+import userdao
+import appserversdao
 
 
-# Method that purges the non functional servers of an application
+# Method that purges the non available servers of an application
 def app_servers_status_checker():
     print 'init the cron task'
-    appsnames = appdao.get_apps()
-    for appname in appsnames:
+    for appname in appdao.get_apps():
         print 'app to check %s' % appname
         servers = appdao.get_servers(appname)
         for server in servers:
@@ -29,20 +30,56 @@ def app_servers_status_checker():
                 appserversdao.remove_endpoint(appname, host, port)
 
 
+# Another cron task. Detects if an app has no available servers/endpoints and removes it
+def check_orphans_apps():
+    print 'init orphans cron task'
+    for app_name in appdao.get_apps():
+        if not appdao.get_servers(app_name):
+            appdao.remove_app(app_name)
+            appserversdao.remove_app(app_name)
+
+
 # Principal method of the app.
 # Gets a server for the app and path request and makes the request.
-def balance_request(appid, path):
-    print 'You %s want path: %s' % (appid, path)
-    h1 = httplib.HTTPConnection(appserversdao.get_random_endpoint_of_app(appid)[0])
-    headers = dict(request.headers)
-    headers.pop("Content-Length", None)
-    h1.request(method=request.method, url="/%s" % path, headers=headers)
-    r = h1.getresponse()
-    res = Response()
-    res.headers = r.getheaders()
-    res.data = r.read()
-    res.status_code = r.status
-    return res
+def balance_request(app_name, path):
+    # print 'You %s want path: %s' % (app_name, path) #TODO SHOW IN DEBUG MODE
+    endpoint = appserversdao.get_random_endpoint_of_app(app_name)
+    if endpoint:
+        try:
+            h1 = httplib.HTTPConnection(endpoint)
+            headers = dict(request.headers)
+            headers.pop("Content-Length", None)
+            h1.request(method=request.method, url="/%s" % path, headers=headers)
+            r = h1.getresponse()
+            resp = Response()
+            data = r.read()
+            for header in r.getheaders():
+                # print 'header %s value %s' % (header[0], r.getheader(header[0])) #TODO SHOW IN DEBUG MODE
+                if header[0] != 'transfer-encoding':
+                    resp.headers[header[0]] = str(r.getheader(header[0]))
+            resp.data = data
+            return resp
+        except:
+            endpoint = appserversdao.get_another_endpoint_of_app(app_name, endpoint)
+            try:
+                h1 = httplib.HTTPConnection(endpoint)
+                headers = dict(request.headers)
+                headers.pop("Content-Length", None)
+                h1.request(method=request.method, url="/%s" % path, headers=headers)
+                r = h1.getresponse()
+                resp = Response()
+                data = r.read()
+                for header in r.getheaders():
+                    # print 'header %s value %s' % (header[0], r.getheader(header[0])) #TODO SHOW IN DEBUG MODE
+                    if header[0] != 'transfer-encoding':
+                        resp.headers[header[0]] = str(r.getheader(header[0]))
+                resp.data = data
+                return resp
+            except:
+                return create_response('We can not request the app in two attempts', httplib.PRECONDITION_FAILED, '04')
+
+    else:
+        return create_response('No endpoints registered for that app', httplib.CONFLICT, '03')
 
 
 def user_exists(email):
@@ -57,24 +94,10 @@ def app_exists(app_name):
 # Register a new user
 def register_user(email, password):
     if userdao.register_user(email, password):
-        res = Response()
-        res.status_code = httplib.CREATED
-        res.mimetype = "application/json"
-        f = dict()
-        f['description'] = email
-        f['status_code'] = httplib.CREATED
-        res.data = json.dumps(f)
-        return res
+        return create_response(email, httplib.CREATED)
     else:
-        res = Response()
-        res.status_code = httplib.CONFLICT
-        res.mimetype = "application/json"
-        f = dict()
-        f['description'] = 'A error occurred when trying to register with email %s ' % email
-        f['error'] = '03'
-        f['status_code'] = httplib.CONFLICT
-        res.data = json.dumps(f)
-        return res
+        return create_response('An error occurred when trying to register with email %s ' % email, httplib.CONFLICT,
+                               '03')
 
 
 # Remove a user
@@ -84,11 +107,10 @@ def remove_user(email, password):
         for app in apps:
             appdao.remove_app(app, email)
             appserversdao.remove_app(app)
-        # TODO MAKE A GOOD RESPONSE
-        return None
+        return create_response(email, httplib.OK)
     else:
-        # TODO MAKE A BAD RESPONSE
-        return None
+        return create_response('An error occurred when trying to un-register with email %s ' % email, httplib.CONFLICT,
+                               '03')
 
 
 # Register a new app for a user,
@@ -96,7 +118,7 @@ def remove_user(email, password):
 def register_app(email, app_name, host, port, status_path):
     appdao.add_app_server(app_name, host, port, email, status_path)
     appserversdao.register_endpoint(app_name, host, port)
-    return None
+    return create_response(app_name, httplib.CREATED)
 
 
 # Remove an existing app checking if the app is registered by the user (email)
@@ -104,22 +126,20 @@ def remove_app(email, app_name):
     if appdao.is_app_of_user(app_name, email):
         appserversdao.remove_app(app_name)
         appdao.remove_app(app_name, email)
-        # TODO MAKE A GOOD RESPONSE
-        return None
+        return create_response(app_name, httplib.OK)
     else:
-        # TODO MAKE A BAD RESPONSE
-        return None
+        return create_response('An error occurred when trying to un-register the app %s ' % app_name,
+                               httplib.CONFLICT, '03')
 
 
 # Register a new server of an existing application
 def register_server_app(email, app_name, host, port, status_path):
     if appdao.is_app_of_user(app_name, email):
         register_app(email, app_name, host, port, status_path)
-        # TODO MAKE A GOOD RESPONSE
-        return None
+        return create_response('%s:%s' % (host, port), httplib.CREATED)
     else:
-        # TODO MAKE A BAD RESPONSE
-        return None
+        return create_response('An error occurred when trying to register with node %s:%s ' % (host, port),
+                               httplib.CONFLICT, '03')
 
 
 # Remove a server of an existing application
@@ -127,8 +147,21 @@ def remove_server_app(email, app_name, host, port):
     if appdao.is_app_of_user(app_name, email):
         appserversdao.delete_endpoint(app_name, host, port)
         appdao.remove_server(app_name, host, port, email)
-        # TODO MAKE A GOOD RESPONSE
-        return None
+        return create_response('%s:%s' % (host, port), httplib.OK)
     else:
-        # TODO MAKE A BAD RESPONSE
-        return None
+        return create_response('An error occurred when trying to un-register with node %s:%s ' % (host, port),
+                               httplib.CONFLICT, '03')
+
+
+# Auxiliary method that creates a common response structure
+def create_response(description, status_code, error=None, mimetype='application/json'):
+    res = Response()
+    res.status_code = status_code
+    res.mimetype = mimetype
+    f = dict()
+    f['description'] = description
+    if error:
+        f['error'] = error
+    f['status_code'] = status_code
+    res.data = json.dumps(f)
+    return res

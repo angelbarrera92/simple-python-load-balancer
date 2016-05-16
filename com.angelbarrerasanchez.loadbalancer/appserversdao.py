@@ -37,9 +37,20 @@ def get_endpoints_of_app(app_name):
 def get_random_endpoint_of_app(app_name):
     machines = get_endpoints_of_app(app_name)
     if machines:
-        return random.sample(machines, 1)
+        return random.sample(machines, 1)[0]
     else:
         return None
+
+
+# If there is endpoints registered of an application,
+# it will return one endpoint that is not the given one,
+# otherwise it returns None
+def get_another_endpoint_of_app(app_name, endpoint):
+    machines = get_endpoints_of_app(app_name)
+    for machine in machines:
+        if machine != endpoint:
+            return machine
+    return None
 
 
 # Check if the app exists looking for servers
