@@ -12,13 +12,14 @@ def write_system_log():
 
 
 def write_apps_log(app_name, path, end_point, total_time, http_response_code):
-    log = dict()
-    log['app_name'] = app_name
-    log['path'] = path
-    log['end_point'] = end_point
-    log['date'] = datetime.datetime.utcnow()
-    log['total_time_ms'] = total_time
-    log['response_code'] = http_response_code
+    log = {
+        'app_name': app_name,
+        'path': path,
+        'end_point': end_point,
+        'date': datetime.datetime.utcnow(),
+        'total_time_ms': total_time,
+        'response_code': http_response_code
+    }
     mongo_collection.insert_one(log)
 
 

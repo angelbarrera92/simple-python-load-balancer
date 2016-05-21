@@ -19,6 +19,7 @@ def check_status_route():
 
 @app.endpoint('balancer')
 def load_balance_route(app_name, path):
+    app.logger.debug('Requested to balance the appname %s, with path %s' % (app_name, str(path)))
     if appservice.app_exists(app_name):
         return appservice.balance_request(app_name, path)
     else:

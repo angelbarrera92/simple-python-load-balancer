@@ -160,7 +160,7 @@ def register_server_app(email, app_name, host, port, status_path):
 # Remove a server of an existing application
 def remove_server_app(email, app_name, host, port):
     if appdao.is_app_of_user(app_name, email):
-        appserversdao.delete_endpoint(app_name, host, port)
+        appserversdao.remove_endpoint(app_name, host, port)
         appdao.remove_server(app_name, host, port, email)
         return create_response('%s:%s' % (host, port), httplib.OK)
     else:
