@@ -15,7 +15,6 @@ def get_servers(app_name):
 
 
 def add_app_server(app_name, host, port, username, infouri=None):
-    print infouri
     app = mongo_collection.find_one({'id': app_name, 'username': username})
     if app:
         app['servers'].append({'host': host, 'port': port, 'infouri' : infouri})

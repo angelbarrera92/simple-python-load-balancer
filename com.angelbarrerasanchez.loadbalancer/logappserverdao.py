@@ -7,10 +7,7 @@ mongo_db = mongo[constants.MONGO_DATABASE]
 mongo_collection = mongo_db[constants.MONGO_LOGS_COLLECTION]
 
 
-def write_system_log():
-    return None
-
-
+# Write logs for balancing results and invoke the purge logs collection
 def write_apps_log(app_name, path, end_point, total_time, http_response_code):
     log = {
         'app_name': app_name,
@@ -21,9 +18,10 @@ def write_apps_log(app_name, path, end_point, total_time, http_response_code):
         'response_code': http_response_code
     }
     mongo_collection.insert_one(log)
-    remove_apps_log(1)
+    remove_apps_log(constants.MONGO_LOGS_MAX_DAYS_DURATION)
 
 
+# Remove old log collection
 def remove_apps_log(max_days):
     date = datetime.utcnow() + timedelta(days=-max_days)
     mongo_collection.remove({'date': {"$lt": date}}, multi=True)
