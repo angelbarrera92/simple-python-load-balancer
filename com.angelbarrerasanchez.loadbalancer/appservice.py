@@ -1,8 +1,11 @@
 from flask import request, Response, json
 import httplib
+import threading
+import time
 import appdao
 import userdao
 import appserversdao
+import logappserverdao
 
 
 # Method that purges the non available servers of an application
@@ -43,6 +46,7 @@ def check_orphans_apps():
 # Gets a server for the app and path request and makes the request.
 def balance_request(app_name, path):
     # print 'You %s want path: %s' % (app_name, path) #TODO SHOW IN DEBUG MODE
+    init_milli_time = int(round(time.time() * 1000))
     endpoint = appserversdao.get_random_endpoint_of_app(app_name)
     if endpoint:
         try:
@@ -58,6 +62,11 @@ def balance_request(app_name, path):
                 if header[0] != 'transfer-encoding':
                     resp.headers[header[0]] = str(r.getheader(header[0]))
             resp.data = data
+            end_milli_time = int(round(time.time() * 1000))
+            total_milli_time = end_milli_time - init_milli_time
+            thr = threading.Thread(target=logappserverdao.write_apps_log,
+                                   args=(app_name, str(path), endpoint, total_milli_time, r.status), kwargs={})
+            thr.start()
             return resp
         except:
             endpoint = appserversdao.get_another_endpoint_of_app(app_name, endpoint)
@@ -74,6 +83,11 @@ def balance_request(app_name, path):
                     if header[0] != 'transfer-encoding':
                         resp.headers[header[0]] = str(r.getheader(header[0]))
                 resp.data = data
+                end_milli_time = int(round(time.time() * 1000))
+                total_milli_time = end_milli_time - init_milli_time
+                thr = threading.Thread(target=logappserverdao.write_apps_log,
+                                       args=(app_name, str(path), endpoint, total_milli_time, r.status), kwargs={})
+                thr.start()
                 return resp
             except:
                 return create_response('We can not request the app in two attempts', httplib.PRECONDITION_FAILED, '04')
@@ -82,6 +96,7 @@ def balance_request(app_name, path):
         return create_response('No endpoints registered for that app', httplib.CONFLICT, '03')
 
 
+# Checks if an user exists
 def user_exists(email):
     return userdao.user_exists(email)
 

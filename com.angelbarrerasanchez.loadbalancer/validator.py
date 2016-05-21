@@ -10,7 +10,7 @@ user_schema = {
     "required": ["email", "password"]
 }
 
-app_machine_schema = {
+app_new_machine_schema = {
     "type": "object",
     "properties": {
         "host": {"type": "string"},
@@ -20,6 +20,15 @@ app_machine_schema = {
     "required": ["host", "port", "statuspath"]
 }
 
+app_machine_schema = {
+    "type": "object",
+    "properties": {
+        "host": {"type": "string"},
+        "port": {"type": "number", "minimum": 0, "maximum": 65535}
+    },
+    "required": ["host", "port"]
+}
+
 
 def is_user_json_valid(user_json):
     try:
@@ -27,6 +36,16 @@ def is_user_json_valid(user_json):
         return True
     except jsonschema.exceptions.ValidationError as ve:
         #sys.stderr.write("Record #{}: ERROR\n".format(user_json))
+        sys.stderr.write(str(ve) + "\n")
+        return False
+
+
+def is_new_machine_json_valid(machine_json):
+    try:
+        validate(machine_json, app_new_machine_schema)
+        return True
+    except jsonschema.exceptions.ValidationError as ve:
+        # sys.stderr.write("Record #{}: ERROR\n".format(user_json))
         sys.stderr.write(str(ve) + "\n")
         return False
 

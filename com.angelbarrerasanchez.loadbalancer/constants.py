@@ -11,7 +11,7 @@ JOB_SERVERS_ID = str(os.getenv('JOB_SERVERS_ID', 'app_servers_status_checker'))
 JOB_SERVERS_INTERVAL_SECONDS = int(os.getenv('JOB_SERVERS_INTERVAL_SECONDS', '60'))
 
 JOB_APPS_ID = str(os.getenv('JOB_APPS_ID', 'apps_status_checker'))
-JOB_APPS_INTERVAL_SECONDS = int(os.getenv('JOB_APPS_INTERVAL_SECONDS', '1800')) # TODO REPLACE WITH 43200, HALF A DAY
+JOB_APPS_INTERVAL_SECONDS = int(os.getenv('JOB_APPS_INTERVAL_SECONDS', '180')) # TODO REPLACE WITH 43200, HALF A DAY
 
 REDIS_HOST = str(os.getenv('REDIS_HOST', 'localhost'))
 REDIS_PORT = int(os.getenv('REDIS_PORT', '6379'))
@@ -24,4 +24,5 @@ MONGO_PASSWORD = str(os.getenv('MONGO_PASSWORD', 'mypass'))
 MONGO_DATABASE = str(os.getenv('MONGO_DATABASE', 'mydatabase'))
 MONGO_USERS_COLLECTION = str(os.getenv('MONGO_USERS_COLLECTION', 'users'))
 MONGO_APPS_COLLECTION = str(os.getenv('MONGO_APPS_COLLECTION', 'serverstatus'))
+MONGO_LOGS_COLLECTION = str(os.getenv('MONGO_APPS_COLLECTION', 'serverlogs'))
 MONGO_URI = "mongodb://%s:%s@%s:%s/%s" % (MONGO_USERNAME, MONGO_PASSWORD, MONGO_HOST, MONGO_PORT, MONGO_DATABASE)

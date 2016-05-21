@@ -22,7 +22,7 @@ def load_balance_route(app_name, path):
     if appservice.app_exists(app_name):
         return appservice.balance_request(app_name, path)
     else:
-        raise ValidationException('02', 'That app does not exists')
+        raise ValidationException('02', 'That app does not exists or it has not available endpoints')
 
 
 
@@ -46,20 +46,20 @@ def user_route():
 @app.route('/api/apps/<string:app_name>', methods=['POST', 'DELETE'])
 @jwt_required()
 def app_route(app_name):
-    if validator.is_machine_json_valid(request.json):
-        if request.method == 'POST':
+    if request.method == 'POST':
+        if validator.is_new_machine_json_valid(request.json):
             if not appservice.app_exists(app_name):
                 return appservice.register_app(str(current_identity), app_name, request.json['host'],
                                                request.json['port'], request.json['statuspath'])
             else:
                 raise ValidationException('02', 'That app already exists')
-        elif request.method == 'DELETE':
-            if appservice.app_exists(app_name):
-                return appservice.remove_app(str(current_identity), app_name)
-            else:
-                raise ValidationException('02', 'That app does not exists')
-    else:
-        raise ValidationException('01', 'Bad payload posted. Check the payload before send it again', 400)
+        else:
+            raise ValidationException('01', 'Bad payload posted. Check the payload before send it again', 400)
+    elif request.method == 'DELETE':
+        if appservice.app_exists(app_name):
+            return appservice.remove_app(str(current_identity), app_name)
+        else:
+            raise ValidationException('02', 'That app does not exists')
 
 
 @app.route('/api/nodes/<string:app_name>', methods=['POST', 'DELETE'])
@@ -67,12 +67,15 @@ def app_route(app_name):
 def node_app_route(app_name):
     if validator.is_machine_json_valid(request.json):
         if request.method == 'POST':
-            if not appservice.app_exists(app_name):
-                return appservice.register_app(str(current_identity), app_name, request.json['host'],
-                                               request.json['port'], request.json['statuspath'])
+            if validator.is_new_machine_json_valid(request.json):
+                if not appservice.app_exists(app_name):
+                    return appservice.register_app(str(current_identity), app_name, request.json['host'],
+                                                   request.json['port'], request.json['statuspath'])
+                else:
+                    return appservice.register_server_app(str(current_identity), app_name, request.json['host'],
+                                                          request.json['port'], request.json['statuspath'])
             else:
-                return appservice.register_server_app(str(current_identity), app_name, request.json['host'],
-                                                      request.json['port'], request.json['statuspath'])
+                raise ValidationException('01', 'Bad payload posted. Check the payload before send it again', 400)
         elif request.method == 'DELETE':
             if appservice.app_exists(app_name):
                 return appservice.remove_server_app(str(current_identity), app_name, request.json['host'], request.json['port'])
