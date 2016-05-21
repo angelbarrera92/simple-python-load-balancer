@@ -1,0 +1,7 @@
+Flask == 0.10.1
+Flask_APScheduler == 1.3.7
+Flask_JWT == 0.3.2
+jsonschema == 2.5.1
+pymongo == 3.2.2
+redis == 2.10.5
+Werkzeug == 0.11.4

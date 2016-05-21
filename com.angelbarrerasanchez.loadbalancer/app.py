@@ -20,7 +20,7 @@ scheduler.add_job(constants.JOB_APPS_ID, appservice.check_orphans_apps, trigger=
 scheduler.start()
 
 formatter = logging.Formatter("[%(asctime)s] [%(pathname)s:%(lineno)d] [%(levelname)s] - %(message)s")
-handler = RotatingFileHandler('/home/angel/PycharmProjects/loadbalancer/logs/app_load_balancer.log', maxBytes=10000, backupCount=5)
+handler = RotatingFileHandler('./logs/app_load_balancer.log', maxBytes=10000, backupCount=5)
 handler.setLevel(logging.DEBUG)
 handler.setFormatter(formatter)
 flaskapp.logger.addHandler(handler)
