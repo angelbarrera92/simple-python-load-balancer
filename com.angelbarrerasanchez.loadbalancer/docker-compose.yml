@@ -1,34 +1,81 @@
-loadbalancer:
-  build: .
-  dockerfile: Dockerfile
-  ports:
-    - "5000:5000"
-  links:
-    - "mongodb:mongodb"
-    - "redis:redis"
-  environment:
-    - REDIS_HOST=redis
-    - REDIS_PORT=6379
-    - REDIS_PASSWORD=mypass
-    - MONGO_HOST=mongodb
-    - MONGO_PORT=27017
-    - MONGO_USERNAME=user
-    - MONGO_PASSWORD=mypass
-    - MONGO_DATABASE=mydatabase
+version: '2'
 
-mongodb:
-  image: tutum/mongodb
-  ports:
-    - "27017:27017"
-  environment:
-    - MONGODB_USER=user
-    - MONGODB_PASS=mypass
-    - MONGODB_DATABASE=mydatabase
+services:
+  loadbalancer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    networks:
+     - balancer
+     - back
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=mypass
+      - MONGO_HOST=mongodb
+      - MONGO_PORT=27017
+      - MONGO_USERNAME=user
+      - MONGO_PASSWORD=mypass
+      - MONGO_DATABASE=mydatabase
 
-redis:
-  image: tutum/redis
-  ports:
-    - "6379:6379"
-  environment:
-    - REDIS_PASS=mypass
+  mongodb:
+    image: tutum/mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - back
+    environment:
+      - MONGODB_USER=user
+      - MONGODB_PASS=mypass
+      - MONGODB_DATABASE=mydatabase
 
+  redis:
+    image: tutum/redis
+    ports:
+      - "6379:6379"
+    networks:
+      - back
+    environment:
+      - REDIS_PASS=mypass
+
+  microservice1:
+    build:
+      context: .
+      dockerfile: Dockerfile-java
+    ports:
+      - "8080:8080"
+    networks:
+     - balancer
+    depends_on:
+      - loadbalancer
+    environment:
+      - loadBalancerHost=loadbalancer
+      - myPort=8080
+      - myHost=microservice1
+
+  microservice2:
+    build:
+      context: .
+      dockerfile: Dockerfile-java
+    ports:
+      - "8081:8081"
+    depends_on:
+      - loadbalancer
+    networks:
+     - balancer
+    environment:
+      - loadBalancerHost=loadbalancer
+      - myPort=8081
+      - myHost=microservice2
+
+
+networks:
+  balancer:
+    driver: bridge
+  back:
+    driver: bridge

@@ -1,0 +1,5 @@
+FROM java:8-alpine
+COPY ./java-app/MicroServiceBalanced-jar-with-dependencies.jar /usr/src/myapp/app.jar
+WORKDIR /usr/src/myapp
+EXPOSE 8080-8090
+CMD ["java", "-jar", "app.jar"]
