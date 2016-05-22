@@ -63,12 +63,32 @@ Si los datos son correctos, el sistema devolverá en el body un JSON similar al 
 }
 ```
 
-Será el valor de la clave *access_token* nuestro token para realizar operaciones como la consulta de logs de nuestra aplicación o el alta de un nuevo endpoint para una aplicación.
+Será el valor de la clave *access_token* nuestro token para realizar operaciones como la consulta de logs de nuestra aplicación o el alta de un nuevo endpoint para una api.
+
+### Registro de una nueva aplicación/api
+Una vez registrado un usuario y obtenido un token válido, podemos crear una nueva aplicación invocando de la siguiente forma al endpoint ***/api/apps/-yourappid-*** :
+```
+curl -H "Content-Type: application/json" -H "Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6ImFuZ2VsQGFuZ2VsLmNvbSIsImlhdCI6MTQ2MzkxNTE1MCwibmJmIjoxNDYzOTE1MTUwLCJleHAiOjE0NjM5MTU0NTB9.5NXV8LxNFUUU1MbPxRa-tLsGU-i23G0BviIM7vX_ed4" -X POST -d '{"host":"theHostNameOfTheServer","port": ThePortNumberOfTheServer, "statuspath" : "TheStatusPathOfYourServer"}' http://localhost:5000/api/apps/helloworld
+```
+El json enviado se valida contra un json schema:
+```
+{
+    "type": "object",
+    "properties": {
+        "host": {"type": "string"},
+        "port": {"type": "number", "minimum": 0, "maximum": 65535},
+        "statuspath" : {"type": "string"}
+    },
+    "required": ["host", "port", "statuspath"]
+}
+```
+Es importante saber que, el *statuspath* se usa por el balanceador de carga para conocer la salud de un servidor para una api en concreto. Por ahora solo se valida que este responda con un status code 200. En caso contrario, ese endpoint dejará de recibir peticiones.
 
 
 
 ### Disclaimer
 Es un proyecto simple, es decir, falta funcionalidad clave para convertirse en un producto terminado y plenamente productivo. Alguna funcionalidad no implementada que puede echarse en falta puede ser:
+
 1. Registro en dos pasos *(email de confirmación, sms u otro método)*
 2. Baja de usuario en dos pasos *(email de confirmación, sms u otro método)*
     * Baja *lógica*, en lugar de borrado *físico*
