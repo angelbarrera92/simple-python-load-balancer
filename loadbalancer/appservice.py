@@ -123,6 +123,7 @@ def remove_user(email, password):
         for app in apps:
             appdao.remove_app(app, email)
             appserversdao.remove_app(app)
+            logappserverdao.remove_app_logs(app)
         return create_response(email, httplib.OK)
     else:
         return create_response('An error occurred when trying to un-register with email %s ' % email, httplib.CONFLICT,
