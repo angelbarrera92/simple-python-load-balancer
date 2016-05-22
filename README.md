@@ -39,6 +39,26 @@ El json enviado se valida contra un json schema:
 }
 ```
 
+### Baja de usuarios
+Para terminar de utilizar este balanceador de carga, un usuario se puede borrar de él. Para ello:
+```
+curl -H "Content-Type: application/json" -X DELETE -d '{"email":"your@email.com","password":"yourpassword"}' http://localhost:5000/api/users
+```
+El json enviado se valida contra un json schema:
+```
+{
+    "type": "object",
+    "properties": {
+        "email": {"type": "string", "pattern": "(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"},
+        "password": {"type": "string", "minLength": 6, "maxLength": 30},
+    },
+    "required": ["email", "password"]
+}
+```
+
+#### Consideraciones/Funcionalidad implementada para usuarios
+Si un usuario pide la baja en el sistema y tiene aplicaciones y endpoints registrados, estos serán borrados permanentemente. Tambien serán borrado los logs de ejecución asociados a sus aplicaciones.
+
 ### Obtención de tokens
 Para llevar a cabo diversas acciones con el sistema, alta/baja de aplicaciones y/o endpoints/servidores, se necesita de un token de autorización. Este se obtiene invocando al endpoint ***/api/auth*** con el siguiente payload:
 ```
@@ -83,6 +103,17 @@ El json enviado se valida contra un json schema:
 }
 ```
 Es importante saber que, el *statuspath* se usa por el balanceador de carga para conocer la salud de un servidor para una api en concreto. Por ahora solo se valida que este responda con un status code 200. En caso contrario, ese endpoint dejará de recibir peticiones.
+
+### Baja de una aplicación/api existente
+Si tenemos una api o una aplicación que queremos que deje de estar registrada en el sistema, debemos conseguir un token valido para posteriormente utilizarlo en la petición de borrado de la aplicación:
+```
+curl -H "Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6ImFuZ2VsQGFuZ2VsLmNvbSIsImlhdCI6MTQ2MzkxNTE1MCwibmJmIjoxNDYzOTE1MTUwLCJleHAiOjE0NjM5MTU0NTB9.5NXV8LxNFUUU1MbPxRa-tLsGU-i23G0BviIM7vX_ed4" -X DELETE http://localhost:5000/api/apps/helloworld
+```
+Hecho esto, se borra la api y los endpoints registrados para esta de forma que pasa a estar disponible para otro usuario.
+
+#### Consideraciones/Funcionalidad implementada para aplicaciones
+Una aplicación registrada no puede NO tener endpoints asociados. De ser este el caso, un cron ejecutará un purgado cada cierto tiempo *(configurable mediante variables de entorno)* eliminando estas aplicaciones sin servidores.
+
 
 
 
