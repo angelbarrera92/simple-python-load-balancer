@@ -40,6 +40,7 @@ def check_orphans_apps():
         if not appdao.get_servers(app_name):
             appdao.remove_app(app_name)
             appserversdao.remove_app(app_name)
+            logappserverdao.remove_app_logs(app_name)
 
 
 # Principal method of the app.
@@ -141,6 +142,7 @@ def remove_app(email, app_name):
     if appdao.is_app_of_user(app_name, email):
         appserversdao.remove_app(app_name)
         appdao.remove_app(app_name, email)
+        logappserverdao.remove_app_logs(app_name)
         return create_response(app_name, httplib.OK)
     else:
         return create_response('An error occurred when trying to un-register the app %s ' % app_name,

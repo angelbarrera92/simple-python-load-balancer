@@ -18,13 +18,18 @@ def write_apps_log(app_name, path, end_point, total_time, http_response_code):
         'response_code': http_response_code
     }
     mongo_collection.insert_one(log)
-    remove_apps_log(constants.MONGO_LOGS_MAX_DAYS_DURATION)
+    remove_old_apps_log(constants.MONGO_LOGS_MAX_DAYS_DURATION)
 
 
 # Remove old log collection
-def remove_apps_log(max_days):
+def remove_old_apps_log(max_days):
     date = datetime.utcnow() + timedelta(days=-max_days)
     mongo_collection.remove({'date': {"$lt": date}}, multi=True)
+
+
+# Removes all the logs for an application
+def remove_app_logs(app_name):
+    mongo_collection.remove({'app_name': app_name},multi=True)
 
 
 # Get logs of an application
