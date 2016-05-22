@@ -114,8 +114,48 @@ Hecho esto, se borra la api y los endpoints registrados para esta de forma que p
 #### Consideraciones/Funcionalidad implementada para aplicaciones
 Una aplicación registrada no puede NO tener endpoints asociados. De ser este el caso, un cron ejecutará un purgado cada cierto tiempo *(configurable mediante variables de entorno)* eliminando estas aplicaciones sin servidores.
 
+### Alta de un endpoint/servidor para una aplicación
+Una vez registrada una aplicación, se le pueden añadir servidores/endpoints para que atiendan las peticiones que lleguen al balanceador. Para ellos se proporciona una url para registrar estos servidores: */api/nodes/<string:app_name>*. Es necesario autenticarse con el token para asegurarse de que solo registra servidores el dueño de la aplicación.
+```
+curl -H "Content-Type: application/json" -H "Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6ImFuZ2VsQGFuZ2VsLmNvbSIsImlhdCI6MTQ2MzkxNTE1MCwibmJmIjoxNDYzOTE1MTUwLCJleHAiOjE0NjM5MTU0NTB9.5NXV8LxNFUUU1MbPxRa-tLsGU-i23G0BviIM7vX_ed4" -X POST -d '{"host":"theHostNameOfTheServer","port": ThePortNumberOfTheServer, "statuspath" : "TheStatusPathOfYourServer"}' http://localhost:5000/api/nodes/helloworld
+```
 
+El json enviado en el cuerpo es validado contra un json schema:
+```
+{
+    "type": "object",
+    "properties": {
+        "host": {"type": "string"},
+        "port": {"type": "number", "minimum": 0, "maximum": 65535},
+        "statuspath" : {"type": "string"}
+    },
+    "required": ["host", "port", "statuspath"]
+}
+```
 
+Como ya se ha indicado con anterioridad, el statuspath es utilizado por el balanceador de carga para evaluar si un servidor/endpoint puede atender peticiones. El balanceador de carga espera un codigo 200 por parte del endpoint para poder enviarle peticiones que balancear.
+
+### Baja de un endpoint/servidor para una aplicación
+Si se necesita eliminar un endpoint/servidor de los disponibles para una aplicación seguiremos la misma filosofia, invocar a la url */api/nodes/<string:app_name>* con el token de autorización además del payload con el servidor/endpoint a eliminar.
+
+```
+curl -H "Content-Type: application/json" -H "Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6ImFuZ2VsQGFuZ2VsLmNvbSIsImlhdCI6MTQ2MzkxNTE1MCwibmJmIjoxNDYzOTE1MTUwLCJleHAiOjE0NjM5MTU0NTB9.5NXV8LxNFUUU1MbPxRa-tLsGU-i23G0BviIM7vX_ed4" -X DELETE -d '{"host":"theHostNameOfTheServer","port": ThePortNumberOfTheServer}' http://localhost:5000/api/nodes/helloworld
+```
+El json enviado en el cuerpo es validado contra un json schema:
+```
+{
+    "type": "object",
+    "properties": {
+        "host": {"type": "string"},
+        "port": {"type": "number", "minimum": 0, "maximum": 65535}
+    },
+    "required": ["host", "port"]
+}
+```
+Notese la no necesidad de indicar el statuspath en el momento de eliminar un enpoint/servidor de una aplicación.
+
+#### Consideraciones/Funcionalidad implementada para endpoints/servidores
+Cada cierto tiempo, un cron, pregunta el status de los diferentes servidores/endpoints de las diferentes aplicaciones registradas en el balanceador de carga. Para ello se envia una peticion hacia el *host:port/statuspath* registrado para cada aplicación, si este contesta con un codigo diferente al 200, se elimina dicho endpoint de la lista de la aplicación con el fin de prevenir que la petición no se atienda correctamente. 
 
 ### Disclaimer
 Es un proyecto simple, es decir, falta funcionalidad clave para convertirse en un producto terminado y plenamente productivo. Alguna funcionalidad no implementada que puede echarse en falta puede ser:
