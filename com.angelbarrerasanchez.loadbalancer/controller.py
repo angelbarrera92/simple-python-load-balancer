@@ -7,6 +7,7 @@ import appservice
 import validator
 
 app = Flask('load_balancer_app')
+app.url_map.add(Rule('/api/apps/<string:app_name>/', endpoint='balancer')) #Did to allow the base uris of an app
 app.url_map.add(Rule('/api/apps/<string:app_name>/<path:path>', endpoint='balancer')) #Did to allow all verbs/methods on the load balancer method :)
 
 
@@ -18,7 +19,7 @@ def check_status_route():
 
 
 @app.endpoint('balancer')
-def load_balance_route(app_name, path):
+def load_balance_route(app_name, path=''):
     app.logger.debug('Requested to balance the appname %s, with path %s' % (app_name, str(path)))
     if appservice.app_exists(app_name):
         return appservice.balance_request(app_name, path)
@@ -89,7 +90,10 @@ def node_app_route(app_name):
 @app.route('/api/logs/<string:app_name>', methods=['GET'])
 @jwt_required()
 def log_app_route(app_name):
-    return appservice.get_app_logs(app_name, str(current_identity))
+    if appservice.app_exists(app_name):
+        return appservice.get_app_logs(app_name, str(current_identity))
+    else:
+        raise ValidationException('02', 'That app does not exists')
 
 
 #ERRORS
