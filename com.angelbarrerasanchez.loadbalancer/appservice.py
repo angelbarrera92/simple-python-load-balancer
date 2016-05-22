@@ -168,15 +168,30 @@ def remove_server_app(email, app_name, host, port):
                                httplib.CONFLICT, '03')
 
 
+# Checks if the user has that app and gets the logs
+def get_app_logs(app_name, email):
+    if appdao.is_app_of_user(app_name, email):
+        f = {
+            'app_name': app_name,
+            'logs': logappserverdao.get_app_logs(app_name)
+        }
+        return create_response(None, httplib.OK, None, 'application/json', f)
+    else:
+        return create_response('An error occurred when trying to get the %s logs' % app_name, httplib.CONFLICT, '03')
+
+
 # Auxiliary method that creates a common response structure
-def create_response(description, status_code, error=None, mimetype='application/json'):
+def create_response(description, status_code, error=None, mimetype='application/json', content=None):
     res = Response()
     res.status_code = status_code
     res.mimetype = mimetype
-    f = dict()
-    f['description'] = description
-    if error:
-        f['error'] = error
-    f['status_code'] = status_code
-    res.data = json.dumps(f)
+    if content:
+        res.data = json.dumps(content)
+    else:
+        f = dict()
+        f['description'] = description
+        if error:
+            f['error'] = error
+        f['status_code'] = status_code
+        res.data = json.dumps(f)
     return res

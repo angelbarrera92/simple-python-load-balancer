@@ -25,3 +25,8 @@ def write_apps_log(app_name, path, end_point, total_time, http_response_code):
 def remove_apps_log(max_days):
     date = datetime.utcnow() + timedelta(days=-max_days)
     mongo_collection.remove({'date': {"$lt": date}}, multi=True)
+
+
+# Get logs of an application
+def get_app_logs(app_name):
+    return list(mongo_collection.find({'app_name': app_name}, {'_id': 0, 'app_name': 0}))

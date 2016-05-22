@@ -86,6 +86,12 @@ def node_app_route(app_name):
         raise ValidationException('01', 'Bad payload posted. Check the payload before send it again', 400)
 
 
+@app.route('/api/logs/<string:app_name>', methods=['GET'])
+@jwt_required()
+def log_app_route(app_name):
+    return appservice.get_app_logs(app_name, str(current_identity))
+
+
 #ERRORS
 @app.errorhandler(ValidationException)
 def handle_invalid_register(error):
