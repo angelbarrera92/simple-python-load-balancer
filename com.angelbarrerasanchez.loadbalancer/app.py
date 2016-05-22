@@ -8,6 +8,8 @@ from logging.handlers import RotatingFileHandler
 
 flaskapp.config['SECRET_KEY'] = constants.JWT_SECRET
 flaskapp.config['JWT_AUTH_USERNAME_KEY'] = constants.JWT_AUTH_USERNAME_KEY
+flaskapp.config['JWT_AUTH_URL_RULE'] = '/api/auth'
+
 
 jwt = JWT(flaskapp, userdao.authenticate, userdao.identity)
 
