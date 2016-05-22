@@ -39,7 +39,32 @@ El json enviado se valida contra un json schema:
 }
 ```
 
-### Generación de tokens
+### Obtención de tokens
+Para llevar a cabo diversas acciones con el sistema, alta/baja de aplicaciones y/o endpoints/servidores, se necesita de un token de autorización. Este se obtiene invocando al endpoint ***/api/auth*** con el siguiente payload:
+```
+curl -H "Content-Type: application/json" -X POST -d '{"email":"your@email.com","password":"yourpassword"}' http://localhost:5000/api/auth
+```
+El json enviado se valida contra un json schema:
+```
+{
+    "type": "object",
+    "properties": {
+        "email": {"type": "string", "pattern": "(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"},
+        "password": {"type": "string", "minLength": 6, "maxLength": 30},
+    },
+    "required": ["email", "password"]
+}
+```
+Si los datos son correctos, el sistema devolverá en el body un JSON similar al siguiente:
+
+```
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6ImFuZ2VsQGFuZ2VsLmNvbSIsImlhdCI6MTQ2MzkxNTE1MCwibmJmIjoxNDYzOTE1MTUwLCJleHAiOjE0NjM5MTU0NTB9.5NXV8LxNFUUU1MbPxRa-tLsGU-i23G0BviIM7vX_ed4"
+}
+```
+
+Será el valor de la clave *access_token* nuestro token para realizar operaciones como la consulta de logs de nuestra aplicación o el alta de un nuevo endpoint para una aplicación.
+
 
 
 ### Disclaimer
