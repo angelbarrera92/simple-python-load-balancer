@@ -66,7 +66,8 @@ def balance_request(app_name, path):
             end_milli_time = int(round(time.time() * 1000))
             total_milli_time = end_milli_time - init_milli_time
             thr = threading.Thread(target=logappserverdao.write_apps_log,
-                                   args=(app_name, str(path), endpoint, total_milli_time, r.status), kwargs={})
+                                   args=(app_name, str(path), str(request.method), endpoint, total_milli_time
+                                         , r.status), kwargs={})
             thr.start()
             return resp
         except:
@@ -87,7 +88,8 @@ def balance_request(app_name, path):
                 end_milli_time = int(round(time.time() * 1000))
                 total_milli_time = end_milli_time - init_milli_time
                 thr = threading.Thread(target=logappserverdao.write_apps_log,
-                                       args=(app_name, str(path), endpoint, total_milli_time, r.status), kwargs={})
+                                       args=(app_name, str(path), str(request.method), endpoint, total_milli_time,
+                                             r.status), kwargs={})
                 thr.start()
                 return resp
             except:

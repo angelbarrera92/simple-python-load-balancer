@@ -8,10 +8,11 @@ mongo_collection = mongo_db[constants.MONGO_LOGS_COLLECTION]
 
 
 # Write logs for balancing results and invoke the purge logs collection
-def write_apps_log(app_name, path, end_point, total_time, http_response_code):
+def write_apps_log(app_name, path, method, end_point, total_time, http_response_code):
     log = {
         'app_name': app_name,
         'path': path,
+        'method': method,
         'end_point': end_point,
         'date': datetime.utcnow(),
         'total_time_ms': total_time,

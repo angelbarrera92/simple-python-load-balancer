@@ -184,6 +184,7 @@ En caso que la petición se procese correctamente y devuelva respuesta, el balan
 ```
 {
       'app_name': 'your app name',
+      'method' : 'httpMethod'
       'path': 'the app requested',
       'end_point': 'the endpoint that procesed the request',
       'date': 'current time',
@@ -203,7 +204,7 @@ curl -H "Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI
 Esta petición devolverá todos los logs de una aplicación con la siguiente estructura:
 ```
 {
-  "app_name" : "<app_name",
+  "app_name" : "<app_name>",
   "logs" : [{ estructura de logs }]
 }
 ```
@@ -215,6 +216,7 @@ Ejemplo:
     {
       "date": "Sun, 29 May 2016 10:43:27 GMT",
       "end_point": "172.20.0.6:8081",
+      "method" : "GET",
       "path": "",
       "response_code": 200,
       "total_time_ms": 880
@@ -222,6 +224,7 @@ Ejemplo:
     {
       "date": "Sun, 29 May 2016 11:02:32 GMT",
       "end_point": "172.20.0.6:8081",
+      "method" : "GET",
       "path": "",
       "response_code": 200,
       "total_time_ms": 49
@@ -229,6 +232,7 @@ Ejemplo:
     {
       "date": "Sun, 29 May 2016 11:02:34 GMT",
       "end_point": "172.21.0.3:8080",
+      "method" : "GET",
       "path": "",
       "response_code": 200,
       "total_time_ms": 265
