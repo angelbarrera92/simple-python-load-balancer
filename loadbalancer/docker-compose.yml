@@ -22,6 +22,8 @@ services:
       - MONGO_USERNAME=user
       - MONGO_PASSWORD=mypass
       - MONGO_DATABASE=mydatabase
+      - JOB_SERVERS_INTERVAL_SECONDS=180
+      - JOB_APPS_INTERVAL_SECONDS=400
 
   mongodb:
     image: tutum/mongodb
@@ -51,12 +53,13 @@ services:
       - "8080:8080"
     networks:
      - balancer
+     - back
     depends_on:
       - loadbalancer
     environment:
       - loadBalancerHost=loadbalancer
-      - myPort=8080
-      - myHost=microservice1
+      - server.port=8080
+      - spring.data.mongodb.uri=mongodb://user:mypass@mongodb:27017/mydatabase
 
   microservice2:
     build:
@@ -68,10 +71,11 @@ services:
       - loadbalancer
     networks:
      - balancer
+     - back
     environment:
       - loadBalancerHost=loadbalancer
-      - myPort=8081
-      - myHost=microservice2
+      - server.port=8081
+      - spring.data.mongodb.uri=mongodb://user:mypass@mongodb:27017/mydatabase
 
 
 networks:
