@@ -10,7 +10,7 @@ Según [Wikipedia][wikipedia-loadbalancer]:
 >Un balanceador de carga fundamentalmente es un dispositivo de hardware o software que se pone al frente de un conjunto de servidores que atienden una aplicación y, tal como su nombre lo indica, asigna o balancea las solicitudes que llegan de los clientes a los servidores usando algún algoritmo *(desde un simple Round Robin hasta algoritmos más sofisticados)*.
 
 ### ¿Qué son los microservicios?
-Según [Diego Uribe Gamez @ Platzi][platzi-microservicios]:
+Explicado por [Diego Uribe Gamez @ Platzi][platzi-microservicios]:
 >Un sistema basado en Microservicios es aquel que distribuye toda su organización de forma vertical, aquí el detalle es que un tipo de información solicitada puede ser consultada a su servicio específico, este servicio independiente en recursos es capaz de responder la solicitud.
 
 ### ¿Qué es flask?
@@ -155,8 +155,87 @@ El json enviado en el cuerpo es validado contra un json schema:
 Notese la no necesidad de indicar el statuspath en el momento de eliminar un enpoint/servidor de una aplicación.
 
 #### Consideraciones/Funcionalidad implementada para endpoints/servidores
-Cada cierto tiempo, un cron, pregunta el status de los diferentes servidores/endpoints de las diferentes aplicaciones registradas en el balanceador de carga. Para ello se envia una peticion hacia el *host:port/statuspath* registrado para cada aplicación, si este contesta con un codigo diferente al 200, se elimina dicho endpoint de la lista de la aplicación con el fin de prevenir que la petición no se atienda correctamente. 
+Cada cierto tiempo, un cron, pregunta el status de los diferentes servidores/endpoints de las diferentes aplicaciones registradas en el balanceador de carga. Para ello se envia una peticion hacia el *host:port/statuspath* registrado para cada aplicación, si este contesta con un codigo diferente al 200, se elimina dicho endpoint de la lista de la aplicación con el fin de prevenir que la petición no se atienda correctamente.
 
+### Balanceo de peticiones
+Una vez dado de alta una aplicación/api y con al menos un endpoint, este api puede ser invocado a través del siguiente endpoint
+
+```
+http://localhost:5000/api/balance/<app_name>
+```
+Estas peticiones no necesitan de autorización/token. La elección del servidor al que se pasará esta petición se resuelve de forma aleatoria. Se intenta mandar la petición dos veces a dos servidores/endpoints **diferentes**. En caso que no se pueda responder correctamente a la petición, el balanceador sacará un mensaje de error
+```
+{
+  "status_code" : "412",
+  "error" : "04",
+  "description" : "We can not request the app in two attempts"
+}
+```
+Si la aplicación no tiene ningún endpoint/servidor disponible, el balanceador responderá con el siguiente error:
+```
+{
+  "status_code" : "409",
+  "error" : "03",
+  "description" : "No endpoints registered for that app"
+}
+```
+
+En caso que la petición se procese correctamente y devuelva respuesta, el balanceador responderá exactamente igual que el servidor que ha procesado la petición *(headers, body...)*. Es en este caso cuando se almacena una entrada en la colección de MongoDB con el detalle de la petición a modo de log. Se almacenaría la siguiente estructura:
+```
+{
+      'app_name': 'your app name',
+      'path': 'the app requested',
+      'end_point': 'the endpoint that procesed the request',
+      'date': 'current time',
+      'total_time_ms': 'time needed',
+      'response_code': 'http response code'
+}
+```
+Esta información puede ser consultada por el dueño de la api/aplicación.
+
+### Consulta de logs de api/aplicación
+Como se ha adelantado en el apartado anterior, una vez una aplicación recibe peticiones que balancear y estas son procesadas, se almacena en base de datos *(MongoDB)* un historico de peticiones.
+
+Para ello se debe invocar al siguiente endpoint con un token válido:
+```
+curl -H "Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZGVudGl0eSI6ImFuZ2VsQGFuZ2VsLmNvbSIsImlhdCI6MTQ2MzkxNTE1MCwibmJmIjoxNDYzOTE1MTUwLCJleHAiOjE0NjM5MTU0NTB9.5NXV8LxNFUUU1MbPxRa-tLsGU-i23G0BviIM7vX_ed4" -X GET http://localhost:5000/api/logs/<app_name>
+```
+Esta petición devolverá todos los logs de una aplicación con la siguiente estructura:
+```
+{
+  "app_name" : "<app_name",
+  "logs" : [{ estructura de logs }]
+}
+```
+Ejemplo:
+```
+{
+  "app_name": "restproducts",
+  "logs": [
+    {
+      "date": "Sun, 29 May 2016 10:43:27 GMT",
+      "end_point": "172.20.0.6:8081",
+      "path": "",
+      "response_code": 200,
+      "total_time_ms": 880
+    },
+    {
+      "date": "Sun, 29 May 2016 11:02:32 GMT",
+      "end_point": "172.20.0.6:8081",
+      "path": "",
+      "response_code": 200,
+      "total_time_ms": 49
+    },
+    {
+      "date": "Sun, 29 May 2016 11:02:34 GMT",
+      "end_point": "172.21.0.3:8080",
+      "path": "",
+      "response_code": 200,
+      "total_time_ms": 265
+    }
+  ]
+}
+```
 ### Disclaimer
 Es un proyecto simple, es decir, falta funcionalidad clave para convertirse en un producto terminado y plenamente productivo. Alguna funcionalidad no implementada que puede echarse en falta puede ser:
 
@@ -167,6 +246,8 @@ Es un proyecto simple, es decir, falta funcionalidad clave para convertirse en u
     * Está implementado una auditoria muy ligera en MongoDB.
 4. Aplicar un rate limit de peticiones.
 5. Gestión de errores mas depurada.
+6. Securizar APIs con tokens.
+7. Limitar la salida de la consulta de logs con paginación.
 
 Seguro que falta alguna funcionalidad crítica mas :), sed creativos, espero vuestros pr.
 
