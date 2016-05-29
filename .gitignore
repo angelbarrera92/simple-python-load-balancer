@@ -143,3 +143,6 @@ fabric.properties
 
 # *.iml
 # modules.xml
+
+# JAVA
+.*
