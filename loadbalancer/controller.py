@@ -7,15 +7,8 @@ import appservice
 import validator
 
 app = Flask('load_balancer_app')
-app.url_map.add(Rule('/api/apps/<string:app_name>/', endpoint='balancer')) #Did to allow the base uris of an app
-app.url_map.add(Rule('/api/apps/<string:app_name>/<path:path>', endpoint='balancer')) #Did to allow all verbs/methods on the load balancer method :)
-
-
-# REMOVE WHEN SCHEDULER IS FULL DEVELOPED
-@app.route('/status')
-def check_status_route():
-    appservice.app_servers_status_checker()
-
+app.url_map.add(Rule('/api/balance/<string:app_name>/', endpoint='balancer')) #Did to allow the base uris of an app
+app.url_map.add(Rule('/api/balance/<string:app_name>/<path:path>', endpoint='balancer')) #Did to allow all verbs/methods on the load balancer method :)
 
 
 @app.endpoint('balancer')
