@@ -184,7 +184,7 @@ En caso que la petición se procese correctamente y devuelva respuesta, el balan
 ```
 {
       'app_name': 'your app name',
-      'method' : 'httpMethod'
+      'method' : 'httpMethod',
       'path': 'the app requested',
       'end_point': 'the endpoint that procesed the request',
       'date': 'current time',
